@@ -5,7 +5,7 @@ from datetime import timedelta
 import smtplib
 from email.message import EmailMessage
 from settings import *
-import zipfile
+
 
 def save_log_txt(dane):
     try:
@@ -66,19 +66,14 @@ def read_all_files():
 
 
 def get_dirs_ftp(folder=""):
-
-        #print("FOLDER SZUKAJ: ", folder) 
-        try:
-            contents = ftp.mlsd(folder)
-            folders = []     
-            for item in contents:          
-                if item[1]['type'] == "dir":
-                    folders.append(folder+"/"+item[0])
-                    #print(item[0])
-            return folders
-
-        except ftp.error_perm as resp:
-            save_log_txt("Błąd get_dirs_ftp! " + folder + str(resp))
+    contents = ftp.nlst(folder)
+    folders = []
+    for item in contents:
+        #print(item)
+        if "." not in item and "_mail" not in item and "_poprzednie" not in item:
+        #if "." not in item:
+            folders.append(item)
+    return folders
 
 
 def get_all_dirs_ftp(folder=""):
@@ -144,13 +139,6 @@ def get_new_files_dir_ftp():
                     
                     if "." in file[0]:
                         new_files.append("PLIK: -->" + file[0] +  "\n")
-                        #try:
-                        #    if ".zip" in file[0]:                      
-                        #        zip_files = zipfile.ZipFile(dir_prev + "/" + file[0])
-                        #        for file_in_zip in zip_files.namelist():
-                        #            new_files.append("PLIK W ZIP: -->" + file_in_zip +  "\n")
-                        #except:
-                        #    save_log_txt("Błąd get_new_files_dir_ftp ZIP! " + zip_file)
 
         
 
@@ -175,10 +163,6 @@ if len(new_files)>0:
     for new_file in new_files:
         save_log_txt("" + new_file)
         content = content + "" + new_file + ""
-    
-    content = content + "\n\n-- KONIEC --"
-    content = content + "\n\n-- Wiadomość automatyczna, proszę na nią nie odpowiadać --"
-    content = content + "\n\n"
 
     msg = EmailMessage()
     msg.set_content(content)
